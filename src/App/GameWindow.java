@@ -1,6 +1,7 @@
 package App;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.geom.AffineTransform;
 
 public class GameWindow extends JPanel implements Runnable{
     /*
@@ -31,7 +32,9 @@ public class GameWindow extends JPanel implements Runnable{
     //Player Values
     int player_x = 400;
     int player_y = 400;
-    int playerSpeed = 20;
+    int playerSpeed = 1;
+    double playerHeading = 0;
+
 
     public GameWindow(){
         this.setPreferredSize(new Dimension(gameWidth, gameHeight));
@@ -48,42 +51,51 @@ public class GameWindow extends JPanel implements Runnable{
 
     @Override
     public void run(){
+
+        double drawInterval = 1000000000/FPS;
+        double delta = 0;
+        long lastTime = System.nanoTime();
+        long currentTime;
+
+
         while(gameThread != null){
-            double drawInterval = 100000000/FPS;
-            double nextDrawTime = System.nanoTime() + drawInterval;
 
-            //System.out.println("Running Lolz!");
-            //Update Location
-            update();
-            repaint();
-
-            double remainingTime = nextDrawTime-System.nanoTime();
-
-            if(remainingTime<0){
-                remainingTime = 0;
+            System.out.println(Math.toDegrees(playerHeading));
+            if(Math.toDegrees(playerHeading) > 360){
+                playerHeading = 0;
             }
+            currentTime = System.nanoTime();
 
-            try {
-                Thread.sleep((long) remainingTime);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            delta += (currentTime - lastTime) / drawInterval;
+
+            lastTime = currentTime;
+            if(delta >= 1){
+                update();
+                repaint();
+                delta--;
             }
 
         }
     }
 
     public void update(){
-        if(keys.upPress == true){
-            player_y -= playerSpeed;
+        if(keys.upPress){
+            if(playerHeading>=0){
+                player_x += (Math.sin(Math.toDegrees(playerHeading)))*playerSpeed;
+                player_y += (Math.cos(Math.toDegrees(playerHeading)))*playerSpeed;
+            }
         }
-        if(keys.downPress == true){
-            player_y += playerSpeed;
+        if(keys.downPress){
+            player_y += (Math.cos(playerHeading))*playerSpeed;
+            player_x -= (Math.sin(playerHeading))*playerSpeed;
         }
-        if(keys.leftPress == true){
-            player_x -= playerSpeed;
+        if(keys.leftPress){
+            playerHeading += 0.1;
+
+
         }
-        if(keys.rightPress == true){
-            player_x += playerSpeed;
+        if(keys.rightPress){
+            playerHeading -= 0.1;
         }
     }
 
@@ -93,8 +105,13 @@ public class GameWindow extends JPanel implements Runnable{
         graphics.setColor(Color.white);
 
 
-        graphics.fill3DRect(player_x,player_y,ActualTileSize,ActualTileSize,true);
-        graphics.dispose();
+        AffineTransform backup = graphics.getTransform();
+        AffineTransform transformation = new AffineTransform();
+        transformation.rotate(playerHeading, player_x, player_y);
+        graphics.transform(transformation);
+        graphics.fillPolygon(new int[]{player_x, player_x - 10, player_x + 10}, new int[]{player_y, player_y + 50, player_y + 50},3);
+        graphics.setTransform(backup);
+
     }
 
 

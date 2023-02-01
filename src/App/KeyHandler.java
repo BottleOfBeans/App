@@ -1,7 +1,6 @@
 package App;
 
 import com.sun.source.doctree.AttributeTree;
-
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
@@ -17,16 +16,16 @@ public class KeyHandler implements KeyListener {
     @Override
     public void keyPressed(KeyEvent e) {
         int code = e.getKeyCode();
-        if( code == KeyEvent.VK_UP);{
+        if(code == KeyEvent.VK_W){
             upPress = true;
         }
-        if( code == KeyEvent.VK_DOWN);{
+        if(code == KeyEvent.VK_S){
             downPress = true;
         }
-        if( code == KeyEvent.VK_LEFT);{
+        if(code == KeyEvent.VK_D){
             leftPress = true;
         }
-        if( code == KeyEvent.VK_RIGHT);{
+        if(code == KeyEvent.VK_A){
             rightPress = true;
         }
     }
@@ -34,16 +33,16 @@ public class KeyHandler implements KeyListener {
     @Override
     public void keyReleased(KeyEvent e) {
         int code = e.getKeyCode();
-        if( code == KeyEvent.VK_UP);{
+        if(code == KeyEvent.VK_W){
             upPress = false;
         }
-        if( code == KeyEvent.VK_DOWN);{
+        if(code == KeyEvent.VK_S){
             downPress = false;
         }
-        if( code == KeyEvent.VK_LEFT);{
+        if(code == KeyEvent.VK_D){
             leftPress = false;
         }
-        if( code == KeyEvent.VK_RIGHT);{
+        if(code == KeyEvent.VK_A){
             rightPress = false;
         }
     }
