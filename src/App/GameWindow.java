@@ -13,7 +13,20 @@ public class GameWindow extends JPanel implements Runnable{
     static int ScalableValue = 3;
     static int gameColumnAmount = 16;
     static int gameRowAmount = 12;
-
+    static int[][] data = {
+            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+            {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
+            {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
+            {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
+            {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
+            {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
+            {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
+            {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
+            {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
+            {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
+            {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
+            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    };
     /*
         ActualTileSize uses the variables from above to calculate how big each tile actually should be
         Game Width and Height takes into account the columns and rows and calculates the window heights and widths using all the factors provided above
@@ -32,7 +45,7 @@ public class GameWindow extends JPanel implements Runnable{
     //Player Values
     int player_x = 400;
     int player_y = 400;
-    int playerSpeed = 1;
+    int playerSpeed = 3;
     double playerHeading = 0;
 
 
@@ -60,7 +73,7 @@ public class GameWindow extends JPanel implements Runnable{
 
         while(gameThread != null){
 
-            System.out.println(Math.toDegrees(playerHeading));
+            //System.out.println(Math.toDegrees(playerHeading));
             if(Math.toDegrees(playerHeading) > 360){
                 playerHeading = 0;
             }
@@ -83,10 +96,13 @@ public class GameWindow extends JPanel implements Runnable{
 
     public void update(){
         if(keys.upPress){
-            if(playerHeading>=0){
-                player_x += (Math.sin(Math.toDegrees(playerHeading)))*playerSpeed;
-                player_y += (Math.cos(Math.toDegrees(playerHeading)))*playerSpeed;
-            }
+            double changeX = Math.sin(playerHeading) * playerSpeed;
+            double changeY = Math.cos(playerHeading) * playerSpeed;
+
+            System.out.println("Change in X: "+changeX+"         Change in Y: "+changeY);
+            player_x += changeX;
+            player_y -= changeY;
+
         }
         if(keys.downPress){
             player_y += (Math.cos(playerHeading))*playerSpeed;
@@ -110,10 +126,16 @@ public class GameWindow extends JPanel implements Runnable{
 
         AffineTransform backup = graphics.getTransform();
         AffineTransform transformation = new AffineTransform();
-        transformation.rotate(playerHeading, player_x, player_y);
+        transformation.rotate(playerHeading, player_x, player_y+25);
         graphics.transform(transformation);
         graphics.fillPolygon(new int[]{player_x, player_x - 10, player_x + 10}, new int[]{player_y, player_y + 50, player_y + 50},3);
         graphics.setTransform(backup);
+
+        for(int row = 0; row<data.length; row++){
+            for(int col = 0; col<data[row].length; col++){
+
+            }
+        }
 
     }
 
