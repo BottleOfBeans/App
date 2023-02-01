@@ -64,6 +64,9 @@ public class GameWindow extends JPanel implements Runnable{
             if(Math.toDegrees(playerHeading) > 360){
                 playerHeading = 0;
             }
+            else if(Math.toDegrees(playerHeading) <-360){
+                playerHeading = 0;
+            }
             currentTime = System.nanoTime();
 
             delta += (currentTime - lastTime) / drawInterval;
