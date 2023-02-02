@@ -15,16 +15,16 @@ public class GameWindow extends JPanel implements Runnable{
     static int gameRowAmount = 12;
     static int[][] data = {
             {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+            {0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0},
+            {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0},
+            {0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
             {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
+            {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0},
+            {0, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0},
             {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
+            {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0},
             {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
-            {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
-            {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
-            {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
-            {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
-            {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
-            {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
-            {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
+            {0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 0},
             {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     };
     /*
@@ -47,7 +47,8 @@ public class GameWindow extends JPanel implements Runnable{
     int player_y = 400;
     int playerSpeed = 3;
     double playerHeading = 0;
-
+    int playerCoordX = 0;
+    int playerCoordY = 0;
 
     public GameWindow(){
         this.setPreferredSize(new Dimension(gameWidth, gameHeight));
@@ -73,6 +74,12 @@ public class GameWindow extends JPanel implements Runnable{
 
         while(gameThread != null){
 
+            //Player Postition Calculator
+            playerCoordX = Math.round(player_x/ActualTileSize);
+            playerCoordY = Math.round(player_y/ActualTileSize);
+            System.out.println(String.format("(%1$s, %2$s)", playerCoordX, playerCoordY));
+
+
             //System.out.println(Math.toDegrees(playerHeading));
             if(Math.toDegrees(playerHeading) > 360){
                 playerHeading = 0;
@@ -96,10 +103,23 @@ public class GameWindow extends JPanel implements Runnable{
 
     public void update(){
         if(keys.upPress){
+
             double changeX = Math.sin(playerHeading) * playerSpeed;
             double changeY = Math.cos(playerHeading) * playerSpeed;
 
-            System.out.println("Change in X: "+changeX+"         Change in Y: "+changeY);
+            if(changeX>0 && data[playerCoordY][playerCoordX+1] == 0){
+                changeX = 0;
+            }
+            if(changeY<0 && data[playerCoordY+1][playerCoordX] == 0){
+                changeY = 0;
+            }
+            if(changeX<0 && data[playerCoordY][playerCoordX-1] == 0){
+                changeX = 0;
+            }
+            if(changeY>0 && data[playerCoordY-1][playerCoordX] == 0){
+                changeY = 0;
+            }
+
             player_x += changeX;
             player_y -= changeY;
 
@@ -121,20 +141,48 @@ public class GameWindow extends JPanel implements Runnable{
     public void paintComponent(Graphics g){
         super.paintComponent(g);
         Graphics2D graphics = (Graphics2D)g;
-        graphics.setColor(Color.white);
 
-
+        /*
+            Player Graphics
+         */
+        graphics.setColor(Color.orange);
         AffineTransform backup = graphics.getTransform();
         AffineTransform transformation = new AffineTransform();
         transformation.rotate(playerHeading, player_x, player_y+25);
         graphics.transform(transformation);
-        graphics.fillPolygon(new int[]{player_x, player_x - 10, player_x + 10}, new int[]{player_y, player_y + 50, player_y + 50},3);
+        graphics.fillPolygon(new int[]{player_x, player_x - ActualTileSize/2, player_x + ActualTileSize/2}, new int[]{player_y, player_y + ActualTileSize/2, player_y + ActualTileSize/2},3);
         graphics.setTransform(backup);
 
+        /*
+            Player Rays
+         */
+        graphics.setColor(Color.cyan);
+        int rayAmount = 100;
+        double rayDistance = 0.3;
+        for(int i =0-rayAmount/2; i<rayAmount/2; i++){
+            int rayLength = 400;
+            double changeX = Math.sin(playerHeading+Math.toRadians(i*rayDistance)) * rayLength;
+            double changeY = Math.cos(playerHeading+Math.toRadians(i*rayDistance)) * rayLength;
+            double x2 = player_x + changeX;
+            double y2 = player_y - changeY;
+
+            graphics.drawLine(player_x, player_y+ActualTileSize/2, (int)x2, (int)y2);
+
+
+        }
+
+
+
+        /*
+            Wall and Objects in the Way Graphics
+         */
+        graphics.setColor(Color.white);
         for(int row = 0; row<data.length; row++){
             for(int col = 0; col<data[row].length; col++){
-
+                if(data[row][col] == 0){
+                graphics.fillRect(col*ActualTileSize, row*ActualTileSize, ActualTileSize, ActualTileSize);
             }
+                }
         }
 
     }
