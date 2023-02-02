@@ -1,7 +1,12 @@
 package App;
+import org.w3c.dom.css.Rect;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Line2D;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 
 public class GameWindow extends JPanel implements Runnable{
     /*
@@ -27,6 +32,8 @@ public class GameWindow extends JPanel implements Runnable{
             {0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 0},
             {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     };
+    static int amountofWalls = 0;
+
     /*
         ActualTileSize uses the variables from above to calculate how big each tile actually should be
         Game Width and Height takes into account the columns and rows and calculates the window heights and widths using all the factors provided above
@@ -51,6 +58,17 @@ public class GameWindow extends JPanel implements Runnable{
     int playerCoordY = 0;
 
     public GameWindow(){
+
+        /*
+            Calculates the amount of walls, used later for raycastin
+         */
+        for(int[] col: data){
+            for(int value: col){
+                if(value == 0){
+                    amountofWalls++;
+                }
+            }
+        }
         this.setPreferredSize(new Dimension(gameWidth, gameHeight));
         this.setBackground(Color.black);
         this.setDoubleBuffered(true);
@@ -77,8 +95,6 @@ public class GameWindow extends JPanel implements Runnable{
             //Player Postition Calculator
             playerCoordX = Math.round(player_x/ActualTileSize);
             playerCoordY = Math.round(player_y/ActualTileSize);
-            System.out.println(String.format("(%1$s, %2$s)", playerCoordX, playerCoordY));
-
 
             //System.out.println(Math.toDegrees(playerHeading));
             if(Math.toDegrees(playerHeading) > 360){
@@ -107,26 +123,25 @@ public class GameWindow extends JPanel implements Runnable{
             double changeX = Math.sin(playerHeading) * playerSpeed;
             double changeY = Math.cos(playerHeading) * playerSpeed;
 
-            if(changeX>0 && data[playerCoordY][playerCoordX+1] == 0){
-                changeX = 0;
-            }
-            if(changeY<0 && data[playerCoordY+1][playerCoordX] == 0){
-                changeY = 0;
-            }
-            if(changeX<0 && data[playerCoordY][playerCoordX-1] == 0){
-                changeX = 0;
-            }
-            if(changeY>0 && data[playerCoordY-1][playerCoordX] == 0){
-                changeY = 0;
-            }
+            /*
+                Need to Add Some Sort of Collision
+             */
 
             player_x += changeX;
             player_y -= changeY;
 
         }
         if(keys.downPress){
-            player_y += (Math.cos(playerHeading))*playerSpeed;
-            player_x -= (Math.sin(playerHeading))*playerSpeed;
+            double changeX = Math.sin(playerHeading) * playerSpeed;
+            double changeY = Math.cos(playerHeading) * playerSpeed;
+
+            /*
+                Need to  Add Some Sort of Collision
+             */
+
+            player_x -= changeX;
+            player_y += changeY;
+
         }
         if(keys.leftPress){
             playerHeading += 0.1;
@@ -143,6 +158,22 @@ public class GameWindow extends JPanel implements Runnable{
         Graphics2D graphics = (Graphics2D)g;
 
         /*
+            Wall and Objects in the Way Graphics
+         */
+        graphics.setColor(Color.white);
+        int index = 0;
+        Rectangle[] walls = new Rectangle[amountofWalls];
+        for(int row = 0; row<data.length; row++){
+            for(int col = 0; col<data[row].length; col++){
+                if(data[row][col] == 0){
+                    Rectangle wall = new Rectangle(col*ActualTileSize, row*ActualTileSize, ActualTileSize, ActualTileSize);
+                    walls[index] = wall;
+                    index++;
+                }
+            }
+        }
+
+        /*
             Player Graphics
          */
         graphics.setColor(Color.orange);
@@ -153,36 +184,51 @@ public class GameWindow extends JPanel implements Runnable{
         graphics.fillPolygon(new int[]{player_x, player_x - ActualTileSize/2, player_x + ActualTileSize/2}, new int[]{player_y, player_y + ActualTileSize/2, player_y + ActualTileSize/2},3);
         graphics.setTransform(backup);
 
+
         /*
             Player Rays
          */
-        graphics.setColor(Color.cyan);
-        int rayAmount = 100;
-        double rayDistance = 0.3;
+        int rayAmount = 200;
+        double rayDistance = 0.6;
+        Line2D[] rays = new Line2D.Float[rayAmount]; //List storing all the rays and their properties :)
+        index = 0;
         for(int i =0-rayAmount/2; i<rayAmount/2; i++){
-            int rayLength = 400;
+            int rayLength = 800;
             double changeX = Math.sin(playerHeading+Math.toRadians(i*rayDistance)) * rayLength;
             double changeY = Math.cos(playerHeading+Math.toRadians(i*rayDistance)) * rayLength;
             double x2 = player_x + changeX;
             double y2 = player_y - changeY;
+            Line2D ray = new Line2D.Float(player_x, player_y+ActualTileSize/2, (int)x2, (int)y2);
 
-            graphics.drawLine(player_x, player_y+ActualTileSize/2, (int)x2, (int)y2);
+            /*
+                Checking for Collision
+             */
+            for(Rectangle wall: walls){
+                if(ray.intersects(wall)){
+                    double distanceOnScreen = Point2D.distance(player_x,player_y+ActualTileSize/2,wall.getCenterX(),wall.getCenterY());
+                    changeX = Math.sin(playerHeading+Math.toRadians(i*rayDistance)) * (distanceOnScreen);
+                    changeY = Math.cos(playerHeading+Math.toRadians(i*rayDistance)) * (distanceOnScreen);
+                    x2 = player_x + changeX;
+                    y2 = player_y - changeY;
+                    ray = new Line2D.Float(player_x, player_y+ActualTileSize/2, (int)x2, (int)y2);
+                }
+            }
 
 
+            rays[index] = ray;
+            index++;
         }
 
-
-
         /*
-            Wall and Objects in the Way Graphics
+            Drawing out all the different parts
          */
         graphics.setColor(Color.white);
-        for(int row = 0; row<data.length; row++){
-            for(int col = 0; col<data[row].length; col++){
-                if(data[row][col] == 0){
-                graphics.fillRect(col*ActualTileSize, row*ActualTileSize, ActualTileSize, ActualTileSize);
-            }
-                }
+        for(Rectangle wall: walls){
+            graphics.draw(wall);
+        }
+        graphics.setColor(Color.cyan);
+        for(Line2D ray: rays){
+            graphics.draw(ray);
         }
 
     }
